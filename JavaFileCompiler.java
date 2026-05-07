@@ -1,8 +1,5 @@
 import java.io.File;
-import java.io.IOException;
 
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
 import javax.tools.*;
 import java.util.*;
 
@@ -11,29 +8,33 @@ public class JavaFileCompiler {
     
     public static void main(String[] args) {
 
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Select the input file");
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        int result = fileChooser.showOpenDialog(null);
+        System.out.print("Enter the input .java file: ");
+        Scanner scanner = new Scanner(System.in);
+        String inputFileName = scanner.nextLine().trim();
 
-        if (result != JFileChooser.APPROVE_OPTION) {
-            JOptionPane.showMessageDialog(null, "Cancel");
+        if (!inputFileName.toLowerCase().endsWith(".java")) {
+            System.err.println("Invalid format");
+            return;
+        }
+        
+        String workingDirectory = System.getProperty("user.dir");
+        File inputFile = new File(workingDirectory, inputFileName);
+
+        if (!inputFile.exists()) {
+            System.err.println("File not found in working directory");
             return;
         }
 
-        File inputFile = fileChooser.getSelectedFile();
-
-        boolean success = compile(inputFile.getAbsolutePath());
+        boolean success = compile(inputFile.getAbsolutePath(), workingDirectory);
         System.exit(success ? 0 : 1);
     }
 
-    public static boolean compile(String filePath) {
+    public static boolean compile(String filePath, String workingDirectory) {
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
-        String outputDirectory = System.getProperty("user.dir");
-        List<String> options = Arrays.asList("-d", outputDirectory);
+        List<String> options = Arrays.asList("-d", workingDirectory);
         File sourceFile = new File(filePath);
         Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(sourceFile);
         boolean success = compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits).call();
