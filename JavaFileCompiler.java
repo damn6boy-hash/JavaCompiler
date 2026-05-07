@@ -32,14 +32,22 @@ public class JavaFileCompiler {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
+        String outputDirectory = System.getProperty("user.dir");
+        List<String> options = Arrays.asList("-d", outputDirectory);
         File sourceFile = new File(filePath);
         Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjects(sourceFile);
-        boolean success = compiler.getTask(null, fileManager, diagnostics, null, null, compilationUnits).call();
-        
-        for ( Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
-            System.out.format("Error on line %d in %s%n",
+        boolean success = compiler.getTask(null, fileManager, diagnostics, options, null, compilationUnits).call();
+
+        if (success) {
+            System.out.println("Compilation successful.");
+        } else {
+            System.err.println("Compilation failed.");
+            for ( Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
+                System.out.format("Error on line %d in %s%n",
                          diagnostic.getLineNumber(),
                          diagnostic.getSource().toUri());
+        }
+        
         return success;
     }
 }
